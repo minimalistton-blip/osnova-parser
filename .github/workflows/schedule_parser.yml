@@ -1,0 +1,15 @@
+name: Run Parser on Hugging Face Space
+
+on:
+  schedule:
+    # 18:00 MSK = 15:00 UTC
+    - cron: '0 15 * * *'
+  workflow_dispatch:
+
+jobs:
+  run-parser:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Space to execute parser
+        run: |
+          curl -X GET https://johnTuld-osnova.hf.space
