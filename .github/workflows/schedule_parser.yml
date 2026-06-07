@@ -2,14 +2,30 @@ name: Run Parser on Hugging Face Space
 
 on:
   schedule:
-    # 18:00 MSK = 15:00 UTC
-    - cron: '0 15 * * *'
+    - cron: '0 15 * * *'   # 18:00 MSK
   workflow_dispatch:
 
 jobs:
   run-parser:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Space to execute parser
+      - name: Ping Space to execute parser (with retry)
         run: |
-          curl -X GET https://johnTuld-osnova.hf.space
+          # Пробуем разбудить. --retry 3 --retry-delay 10 и --max-time 60 - твои лучшие друзья
+          curl -X GET https://johnTuld-osnova.hf.space \
+            --retry 5 \
+            --retry-delay 15 \
+            --max-time 120 \
+            --fail \
+            -o /dev/null \
+            -w "HTTP Status: %{http_code}\n"
+          
+          # Даем время на выполнение парсинга (и холодный старт)
+          sleep 30
+          
+          # Проверяем, обновился ли файл (опционально)
+          curl -s -o /tmp/recent.json \
+            https://johnTuld-osnova.hf.space/data/recent_documents.json
+          
+          echo "First 10 lines of recent_documents.json:"
+          head -n 10 /tmp/recent.json || echo "File not found yet"
